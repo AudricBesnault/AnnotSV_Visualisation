@@ -1,0 +1,24 @@
+{
+  "name": "annotsv_visualisation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AudricBesnault/AnnotSV_Visualisation.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AudricBesnault/AnnotSV_Visualisation/issues"
+  },
+  "homepage": "https://github.com/AudricBesnault/AnnotSV_Visualisation#readme",
+  "dependencies": {
+    "electron": "^9.0.2",
+    "sql.js": "^0.4.0"
+  }
+}
