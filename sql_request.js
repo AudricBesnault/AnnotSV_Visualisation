@@ -1,5 +1,6 @@
 'use strict'
 
+const app = require('electron').remote.app
 const path = require('path')
 const fs = require('fs')
 const SQL = require('sql.js')
