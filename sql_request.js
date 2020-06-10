@@ -1,10 +1,8 @@
 'use strict'
 
-const app = require('electron').remote.app
 const path = require('path')
 const fs = require('fs')
 const SQL = require('sql.js')
-const dbpath = path.join(app.getPath('userData'), 'sv_base.db')
 
 let _rowsFromSqlDataObject = function (object) {
   let data = {}
@@ -22,7 +20,7 @@ let _rowsFromSqlDataObject = function (object) {
   return data
 }
 
-SQL.dbOpen = function () {
+SQL.dbOpen = function (dbpath) {
   try {
     return new SQL.Database(fs.readFileSync(bdpath))
   } 
@@ -32,7 +30,7 @@ SQL.dbOpen = function () {
   }
 }
 
-SQL.dbClose = function (databaseHandle) {
+SQL.dbClose = function (dbpath, databaseHandle) {
   try {
     let data = databaseHandle.export()
     let buffer = Buffer.alloc(data.length, data)
@@ -50,7 +48,8 @@ SQL.dbClose = function (databaseHandle) {
   A function to create a new SQLite3 database from table.sql.
   This function is called from main.js during initialization 
 */
-sql_request.exports.initDb = function () {
+sql_request.exports.initDb = function (path, renderer_call) {
+  let dbpath = path.join(path, 'sv_base.db')
   let createDb = function () {
     // Create a database.
     let db = new SQL.Database()
@@ -58,13 +57,13 @@ sql_request.exports.initDb = function () {
     let result = db.exec(query)
     if (Object.keys(result).length === 0 &&
       typeof result.constructor === 'function' &&
-      SQL.dbClose(db)) {
+      SQL.dbClose(dbpath, db)) {
       console.log('Created a new database.')
     } else {
       console.log('sql_request.initDb.createDb failed.')
     }
   }
-  let db = SQL.dbOpen()
+  let db = SQL.dbOpen(dbpath)
   if (db === null) {
     createDb()
   } else {
@@ -78,11 +77,14 @@ sql_request.exports.initDb = function () {
       console.log('The database has', tableCount, 'tables.')
     }
   }
+  if (typeof renderer_call=== 'function') {
+      renderer_call()
+  }
 }
 
 
 sql_request.exports.getPatient = function () {
-  let db = SQL.dbOpen(dbpath)
+  let db = SQL.dbOpen(window.sql.dbpath)
   if (db !== null) {
     let query = 'SELECT * FROM `patient` ORDER BY `id` ASC'
     try {
@@ -96,7 +98,7 @@ sql_request.exports.getPatient = function () {
       console.log('Request getPatient', error.message)
     } 
     finally {
-      SQL.dbClose(db, window.model.db)
+      SQL.dbClose(db, window.sql.dbpath)
     }
   }
 }
