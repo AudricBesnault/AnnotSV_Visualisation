@@ -21,9 +21,9 @@ app.on('ready', function () {
     }
   })
 
-  SQL.initDb(app.getPath('userData'))
-    // Load a DOM stub here. See renderer.js for the fully composed DOM.
-    mainWindow.loadURL(`file://${__dirname}/app/html/index.html`)
+  SQL.initDb()
+  // Load a DOM stub here. See renderer.js for the fully composed DOM.
+  mainWindow.loadURL(`file://${__dirname}/app/html/index.html`)
 
   // Enable keyboard shortcuts for Developer Tools on various platforms.
   let platform = os.platform()

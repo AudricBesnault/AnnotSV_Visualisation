@@ -3,6 +3,7 @@
 const path = require('path')
 const fs = require('fs')
 const SQL = require('sql.js')
+const dbpath = path.join(app.getPath('userData'), 'sv_base.db')
 
 let _rowsFromSqlDataObject = function (object) {
   let data = {}
@@ -20,23 +21,25 @@ let _rowsFromSqlDataObject = function (object) {
   return data
 }
 
-SQL.dbOpen = function (databaseFileName) {
+SQL.dbOpen = function () {
   try {
-    return new SQL.Database(fs.readFileSync(databaseFileName))
-  } catch (error) {
+    return new SQL.Database(fs.readFileSync(bdpath))
+  } 
+  catch (error) {
     console.log("Can't open database file.", error.message)
     return null
   }
 }
 
-SQL.dbClose = function (databaseHandle, databaseFileName) {
+SQL.dbClose = function (databaseHandle) {
   try {
     let data = databaseHandle.export()
     let buffer = Buffer.alloc(data.length, data)
-    fs.writeFileSync(databaseFileName, buffer)
+    fs.writeFileSync(dbpath, buffer)
     databaseHandle.close()
     return true
-  } catch (error) {
+  } 
+  catch (error) {
     console.log("Can't close database file.", error)
     return null
   }
@@ -44,42 +47,55 @@ SQL.dbClose = function (databaseHandle, databaseFileName) {
 
 /*
   A function to create a new SQLite3 database from table.sql.
-
   This function is called from main.js during initialization 
 */
-module.exports.initDb = function (appPath) {
-  let dbPath = path.join(appPath, 'test.db')
-  let createDb = function (dbPath) {
+sql_request.exports.initDb = function () {
+  let createDb = function () {
     // Create a database.
     let db = new SQL.Database()
-    let query = fs.readFileSync(
-    path.join(__dirname, 'table.sql'), 'utf8')
+    let query = fs.readFileSync(path.join(__dirname, 'table.sql'), 'utf8')
     let result = db.exec(query)
     if (Object.keys(result).length === 0 &&
       typeof result.constructor === 'function' &&
-      SQL.dbClose(db, dbPath)) {
+      SQL.dbClose(db)) {
       console.log('Created a new database.')
     } else {
       console.log('sql_request.initDb.createDb failed.')
     }
   }
-  let db = SQL.dbOpen(dbPath)
+  let db = SQL.dbOpen()
   if (db === null) {
-    /* The file doesn't exist so create a new database. */
-    createDb(dbPath)
+    createDb()
   } else {
-    /*
-      The file is a valid sqlite3 database. This simple query will demonstrate
-      whether it's in good health or not.
-    */
     let query = 'SELECT count(*) as `count` FROM `sqlite_master`'
     let row = db.exec(query)
     let tableCount = parseInt(row[0].values)
     if (tableCount === 0) {
       console.log('The file is an empty SQLite3 database.')
-      createDb(dbPath)
+      createDb()
     } else {
       console.log('The database has', tableCount, 'tables.')
+    }
+  }
+}
+
+
+sql_request.exports.getPatient = function () {
+  let db = SQL.dbOpen(dbpath)
+  if (db !== null) {
+    let query = 'SELECT * FROM `patient` ORDER BY `id` ASC'
+    try {
+      let row = db.exec(query)
+      if (row !== undefined && row.length > 0) {
+        row = _rowsFromSqlDataObject(row[1])
+        console.log(row)
+      }
+    } 
+    catch (error) {
+      console.log('Request getPatient', error.message)
+    } 
+    finally {
+      SQL.dbClose(db, window.model.db)
     }
   }
 }
