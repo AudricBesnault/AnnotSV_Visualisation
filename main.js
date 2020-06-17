@@ -12,7 +12,7 @@ const SQL = require(path.join(__dirname, 'sql_request.js'))
 var mainWindow = null
 app.on('ready', function () {
   mainWindow = new electron.BrowserWindow({
-    backgroundColor: 'lightgray',
+    backgroundColor: 'black',
     title: config.productName,
     show: false,
     webPreferences: {
@@ -21,9 +21,9 @@ app.on('ready', function () {
     }
   })
 
-  SQL.initDb(app.getPath('userData')
+  SQL.initDb(app.getPath('userData'),
   // Load a DOM stub here. See renderer.js for the fully composed DOM.
-  mainWindow.loadURL(`file://${__dirname}/app/html/index.html`))
+  mainWindow.loadURL(`file://${__dirname}/index.html`))
 
   // Enable keyboard shortcuts for Developer Tools on various platforms.
   let platform = os.platform()

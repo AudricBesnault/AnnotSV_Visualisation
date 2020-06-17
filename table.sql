@@ -6,6 +6,7 @@ CREATE TABLE patient (
 
 CREATE TABLE sv (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id_annot TEXT,
   chrom INTEGER,
   start INTEGER,
   end INTEGER,

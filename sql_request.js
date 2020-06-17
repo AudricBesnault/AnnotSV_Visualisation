@@ -22,7 +22,7 @@ let _rowsFromSqlDataObject = function (object) {
 
 SQL.dbOpen = function (dbpath) {
   try {
-    return new SQL.Database(fs.readFileSync(bdpath))
+    return new SQL.Database(fs.readFileSync(dbpath))
   } 
   catch (error) {
     console.log("Can't open database file.", error.message)
@@ -48,16 +48,16 @@ SQL.dbClose = function (dbpath, databaseHandle) {
   A function to create a new SQLite3 database from table.sql.
   This function is called from main.js during initialization 
 */
-sql_request.exports.initDb = function (path, renderer_call) {
-  let dbpath = path.join(path, 'sv_base.db')
-  let createDb = function () {
+module.exports.initDb = function (pathDir, renderer_call) {
+  let dbpath = path.join(pathDir, 'sv_base.db')
+  let createDb = function (dbPath) {
     // Create a database.
     let db = new SQL.Database()
     let query = fs.readFileSync(path.join(__dirname, 'table.sql'), 'utf8')
     let result = db.exec(query)
     if (Object.keys(result).length === 0 &&
       typeof result.constructor === 'function' &&
-      SQL.dbClose(dbpath, db)) {
+      SQL.dbClose(dbPath, db)) {
       console.log('Created a new database.')
     } else {
       console.log('sql_request.initDb.createDb failed.')
@@ -65,14 +65,14 @@ sql_request.exports.initDb = function (path, renderer_call) {
   }
   let db = SQL.dbOpen(dbpath)
   if (db === null) {
-    createDb()
+    createDb(dbpath)
   } else {
     let query = 'SELECT count(*) as `count` FROM `sqlite_master`'
     let row = db.exec(query)
     let tableCount = parseInt(row[0].values)
     if (tableCount === 0) {
       console.log('The file is an empty SQLite3 database.')
-      createDb()
+      createDb(dbpath)
     } else {
       console.log('The database has', tableCount, 'tables.')
     }
@@ -83,22 +83,42 @@ sql_request.exports.initDb = function (path, renderer_call) {
 }
 
 
-sql_request.exports.getPatient = function () {
-  let db = SQL.dbOpen(window.sql.dbpath)
+module.exports.getSv = function () {
+  let db = SQL.dbOpen(window.sql_request.dbpath)
   if (db !== null) {
-    let query = 'SELECT * FROM `patient` ORDER BY `id` ASC'
+    let query = "SELECT chrom FROM 'sv'"
+    var row
     try {
-      let row = db.exec(query)
+      row = db.exec(query)
       if (row !== undefined && row.length > 0) {
-        row = _rowsFromSqlDataObject(row[1])
-        console.log(row)
+        console.log(row[0])
+        row = _rowsFromSqlDataObject(row[0])
       }
     } 
     catch (error) {
-      console.log('Request getPatient', error.message)
+      console.log('Request getsv', error.message)
     } 
     finally {
-      SQL.dbClose(db, window.sql.dbpath)
+      SQL.dbClose(window.sql_request.dbpath, db)
+      return row
     }
   }
+}
+
+module.exports.addFileInfo = function(fileName) {
+  let db = SQL.dbOpen(window.sql_request.dbpath)
+  console.log(window.sql_request.dbpath)
+  let string = fs.readFileSync(path.join(__dirname, fileName), 'utf8')
+  let tab = string.split('\n')
+
+  var arrayLength = tab.length
+  for (var i = 1; i < arrayLength-1; i++) {
+    var line = tab[i].split('\t')
+    var query = "insert into 'sv' values (NULL, " + "NULL" + ", " + 
+      Number(line[1]) + ", " + Number(line[2]) + ", " + Number(line[3]) + 
+      ", NULL, NULL, NULL, NULL, NULL" + ");"
+    console.log(query)
+    db.exec(query)
+  }
+  SQL.dbClose(window.sql_request.dbpath, db)
 }
