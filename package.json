@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/AudricBesnault/AnnotSV_Visualisation#readme",
   "dependencies": {
-    "electron": "^9.0.2",
+    "electron": "^15.5.5",
     "jquery": "^3.5.1",
     "sql.js": "^0.4.0"
   }
